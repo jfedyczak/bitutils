@@ -1,0 +1,10 @@
+{
+  "name": "bitutils",
+  "version": "1.0.0",
+  "description": "Utility functions for handing bitcoin addresses",
+  "main": "src/bitutils.js",
+  "repository": "git@github.com:jfedyczak/bitutils.git",
+  "author": "Jakub Fedyczak <jakub@fedyczak.net>",
+  "license": "MIT",
+  "private": false
+}
