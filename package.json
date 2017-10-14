@@ -6,5 +6,8 @@
   "repository": "git@github.com:jfedyczak/bitutils.git",
   "author": "Jakub Fedyczak <jakub@fedyczak.net>",
   "license": "MIT",
-  "private": false
+  "private": false,
+  "scripts": {
+    "test": "node test/test.js"
+  }
 }

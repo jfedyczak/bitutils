@@ -41,7 +41,7 @@ module.exports = bitutils = {
 			buf[offset] = 0xfe
 			buf.writeIntLE(i, offset + 1, 4)
 			return 5
-		} else {
+		} else { // doesn't really work due to JS limitations
 			buf[offset] = 0xff
 			buf.writeIntLE(i, offset + 1, 8)
 			return 9
@@ -62,20 +62,20 @@ module.exports = bitutils = {
 	},
 	bufToDec: (buf) => {
 		let dec = []
-		for (let i = buf.length * 2 - 1; i >=0; i--) {
-			let carry = buf[Math.floor(i / 2)]
+		for (let i = buf.length * 2 - 1; i >= 0; i--) {
+			let c = buf[Math.floor(i / 2)]
 			if (i % 2)
-				carry = (carry & 0xf0) >> 4
+				c = (c & 0xf0) >> 4
 			else
-				carry = carry & 0x0f
+				c = c & 0x0f
 			dec = dec.map((d) => {
-				let v = d * 16 + carry
-				carry = Math.floor(v / 10)
+				let v = d * 16 + c
+				c = Math.floor(v / 10)
 				return v % 10
 			})
-			while (carry > 0) {
-				dec.push(carry % 10)
-				carry = Math.floor(carry / 10)
+			while (c > 0) {
+				dec.push(c % 10)
+				c = Math.floor(c / 10)
 			}
 		}
 		let i, f
@@ -92,63 +92,64 @@ module.exports = bitutils = {
 			.digest()
 		)
 		.digest(),
-	base58: (source) => {
-		const base = 58
+	base58: (src) => {
+		let d, c, j, s, k, q
 
-		let digits = [0]
-		for (let i = 0; i < source.length; ++i) {
-			let carry = source[i]
-			for (let j = 0; j < digits.length; ++j) {
-				carry += digits[j] << 8
-				digits[j] = carry % base
-				carry = (carry / base) | 0
+		d = [0]
+		for (i = 0; i < src.length; ++i) {
+			c = src[i]
+			for (j = 0; j < d.length; ++j) {
+				c += d[j] << 8
+				d[j] = c % 58
+				c = (c / 58) | 0
 			}
 
-			while (carry > 0) {
-				digits.push(carry % base)
-				carry = (carry / base) | 0
+			while (c > 0) {
+				d.push(c % 58)
+				c = (c / 58) | 0
 			}
 		}
-		let string = ''
-		for (let k = 0; source[k] === 0 && k < source.length - 1; ++k) string += ALPHABET[0]
-		for (let q = digits.length - 1; q >= 0; --q) string += ALPHABET[digits[q]]
-		return string
+		s = ''
+		for (k = 0; src[k] === 0 && k < src.length - 1; ++k) s += ALPHABET[0]
+		for (q = d.length - 1; q >= 0; --q) s += ALPHABET[d[q]]
+		return s
 	},
-	base58decode: (source) => {
-		let bytes, c, carry, i, j
-		if (source.length === 0) {
+	base58decode: (src) => {
+		let b, c, cr, i, j
+
+		if (src.length === 0) {
 			return Buffer.from('')
 		}
-		bytes = [0]
+		b = [0]
 		i = 0
-		while (i < source.length) {
-			c = source[i];
+		while (i < src.length) {
+			c = src[i];
 			j = 0
-			while (j < bytes.length) {
-				bytes[j] *= 58;
+			while (j < b.length) {
+				b[j] *= 58;
 				j++
 			}
-			bytes[0] += ALPHABET_MAP[c]
-			carry = 0
+			b[0] += ALPHABET_MAP[c]
+			cr = 0
 			j = 0
-			while (j < bytes.length) {
-				bytes[j] += carry
-				carry = bytes[j] >> 8
-				bytes[j] &= 0xff
+			while (j < b.length) {
+				b[j] += cr
+				cr = b[j] >> 8
+				b[j] &= 0xff
 				j++
 			}
-			while (carry) {
-				bytes.push(carry & 0xff)
-				carry >>= 8
+			while (cr) {
+				b.push(cr & 0xff)
+				cr >>= 8
 			}
 			i++
 		}
 		i = 0
-		while (source[i] === "1" && i < source.length - 1) {
-			bytes.push(0)
+		while (src[i] === "1" && i < src.length - 1) {
+			b.push(0)
 			i++
 		}
-		return Buffer.from(bytes.reverse())
+		return Buffer.from(b.reverse())
 	},
 	hash160toAddr: (h, p2sh = false) => {
 		let addr = Buffer.allocUnsafe(25)
