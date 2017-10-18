@@ -1,4 +1,5 @@
 const crypto = require('crypto')
+const EC = require('elliptic').ec
 
 let bitutils
 
@@ -8,6 +9,8 @@ const ALPHABET_MAP = {}
 for (let i = 0; i < ALPHABET.length; i++) {
 	ALPHABET_MAP[ALPHABET[i]] = i
 }
+
+const ecparams = new EC('secp256k1')
 
 module.exports = bitutils = {
 	varInt: (buf) => {
@@ -177,5 +180,11 @@ module.exports = bitutils = {
 					.update(key)
 					.digest()
 				).digest()
-		)
+		),
+	privKeyToAddr: (privKey, compressed = true) => {
+		let key = ecparams.keyFromPrivate(privKey)
+		if (!key.validate().result) throw new Error('Invalid private key')
+		key = Buffer.from(key.getPublic(compressed, 'hex'), 'hex')
+		return bitutils.pubkeytoAddr(key)		
+	}
 }

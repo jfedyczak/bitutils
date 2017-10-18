@@ -190,6 +190,37 @@ const TESTS = [
 			})
 		},
 	},
+	{
+		name: 'privKeyToAddr',
+		test: () => {
+			const cases = [
+				[[Buffer.from('a887add550944120474acff40ef24b2289e7013ec4e00a64c40337d4a0de6f2a', 'hex'), true], '1MS4TJfe79ZfFpBqQxiRd7Rt3xBLJ1MaQU'],
+				[[Buffer.from('8bdd0ab7866759482b8f16065c7010506d362ced443f5709278f3d44f55302b2', 'hex'), true], '18TNjyxQM9qJX3t8PEaRtVzrgd3yqMxy84'],
+				[[Buffer.from('e22d02ecbef915d43853737dc4b725fb4a3de819b5d6c97b9e4fef13128cf311', 'hex'), false], '1JUrzi9bWcNKPDL2Yx9pf1bvUJtfeZ7HWs'],
+				[[Buffer.from('15a763e608b18a7e490060f3c1c29dcc44b7f3d99d6a96ea0549c0908c03a3a0', 'hex'), false], '1EMoPVh3QqD39R2MRbxSK2bQdohmuGqm1Q'],
+			]
+			cases.forEach((c, i) => {
+				let res = bitutils.privKeyToAddr(c[0][0], c[0][1])
+				if (res !== c[1])
+					throw new Error(`Wrong results for case ${i}`)
+			})
+			let ok
+			try {
+				ok = false
+				bitutils.privKeyToAddr(Buffer.from('0000000000000000000000000000000000000000000000000000000000000000', 'hex'))
+			} catch (e) {
+				ok = true
+			}
+			if (!ok) throw new Error('Wrong result')
+			try {
+				ok = false
+				bitutils.privKeyToAddr(Buffer.from('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141', 'hex'))
+			} catch (e) {
+				ok = true
+			}
+			if (!ok) throw new Error('Wrong result')
+		},
+	},
 ]
 
 TESTS.forEach((t, i) => {

@@ -9,5 +9,8 @@
   "private": false,
   "scripts": {
     "test": "node test/test.js"
+  },
+  "dependencies": {
+    "elliptic": "^6.4.0"
   }
 }
