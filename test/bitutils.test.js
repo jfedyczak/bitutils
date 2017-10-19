@@ -189,3 +189,45 @@ test('privKeyToAddr', () => {
 	expect(test_privKeyToAddr(bfx('0000000000000000000000000000000000000000000000000000000000000000'))).toThrow('Invalid private key')
 	expect(test_privKeyToAddr(bfx('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141'))).toThrow('Invalid private key')
 })
+
+test('privKeyToWIF', () => {
+	const cases = [
+		[[bfx('4d1a4c08598e18d8eeb0e54af2d588939d7b30487a404e60f6396b8adf6f6549'), true], 'Kyob5xqGyHWmXiUNoEEAVpP9EaKT1kGnNF2zru3Jodd1fMHnK5WQ'],
+		[[bfx('bf0d2d278acc0feaa23098bab1a6113355e28df761d906bc867908f5d4a4bb2d'), true], 'L3d6AveeUWMRnjt53NySWr35JaEK33atDbbhUzdNWZVCeEANX6EC'],
+		[[bfx('7c992c6ae771e163eba55eae5427487f4c5bd8f9f87f53f991042e93b4bd63b8'), false], '5JmAH7sq1KfLp1DX2LA9Qe2JYbheVoPH3FHSjtb5CvtJ7B79tLC'],
+		[[bfx('0b5d6afda13d5ae9b7f58b174316a0aed6ef6d7dd8187f2e80955f3a2682c9a5'), false], '5HuHtAbSQxR6Rqs8c8MLUMnyjS8jH6HhhSc1FQGWbnaJQ8CJgqj'],
+	]
+	cases.forEach(c => {
+		expect(bitutils.privKeyToWIF(c[0][0], c[0][1])).toBe(c[1])
+	})
+	
+	let test_privKeyToWIF = (key) => () => bitutils.privKeyToWIF(key)
+	expect(test_privKeyToWIF(bfx('0000000000000000000000000000000000000000000000000000000000000000'))).toThrow('Invalid private key')
+	expect(test_privKeyToWIF(bfx('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141'))).toThrow('Invalid private key')
+})
+
+test('WIFToPrivKey', () => {
+	const cases = [
+		[[bfx('4d1a4c08598e18d8eeb0e54af2d588939d7b30487a404e60f6396b8adf6f6549'), true], 'Kyob5xqGyHWmXiUNoEEAVpP9EaKT1kGnNF2zru3Jodd1fMHnK5WQ'],
+		[[bfx('bf0d2d278acc0feaa23098bab1a6113355e28df761d906bc867908f5d4a4bb2d'), true], 'L3d6AveeUWMRnjt53NySWr35JaEK33atDbbhUzdNWZVCeEANX6EC'],
+		[[bfx('7c992c6ae771e163eba55eae5427487f4c5bd8f9f87f53f991042e93b4bd63b8'), false], '5JmAH7sq1KfLp1DX2LA9Qe2JYbheVoPH3FHSjtb5CvtJ7B79tLC'],
+		[[bfx('0b5d6afda13d5ae9b7f58b174316a0aed6ef6d7dd8187f2e80955f3a2682c9a5'), false], '5HuHtAbSQxR6Rqs8c8MLUMnyjS8jH6HhhSc1FQGWbnaJQ8CJgqj'],
+	]
+	cases.forEach(c => {
+		let res = bitutils.WIFToPrivKey(c[1])
+		expect(res.key).toBeBuffer(c[0][0])
+		expect(res.compressed).toBe(c[0][1])
+	})	
+})
+
+test('WIFToAddr', () => {
+	const cases = [
+		['L33suxqWGcWDanbtNCpDH87jAGuaSFB8XwiERHkRNGRScz1AJt8L', '1AoJKXHhQjBNY2vTppwsdLGVMi4FNmCXPF'],
+		['L5nnfrsS28mXynFqN6nSxnLztvxNM9VGu4DdLNQzx4mzuATs4DcU', '1C8CLprSpHEtJmcF2vcDy9GNEnuk22n2T3'],
+		['5K32Nw2BkNE1xVJYmwpsXQH9A1hKGnEPVbu8B6cpJJZ9HoVxGDe', '1C9YvgKHCqYtxMWRWpDqzccspgMYxcdFpJ'],
+		['5K8v22VzPfsjVmqDH5Lpz1BX9NZ8nofSFbgCByRTsP74Cpo6vDe', '1MkkwrcYi2SD8zxFZKE7NEUSEHopo4RKQr'],
+	]
+	cases.forEach(c => {
+		expect(bitutils.WIFToAddr(c[0])).toBe(c[1])
+	})	
+})

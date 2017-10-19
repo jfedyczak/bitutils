@@ -181,10 +181,50 @@ module.exports = bitutils = {
 					.digest()
 				).digest()
 		),
+	validatePrivateKey: (privKey) => {
+		privKey = privKey.toString('hex')
+		return privKey > '0000000000000000000000000000000000000000000000000000000000000000' && privKey < 'fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141'
+	},
 	privKeyToAddr: (privKey, compressed = true) => {
+		if (!bitutils.validatePrivateKey(privKey)) throw new Error('Invalid private key')
+
 		let key = ecparams.keyFromPrivate(privKey)
-		if (!key.validate().result) throw new Error('Invalid private key')
 		key = Buffer.from(key.getPublic(compressed, 'hex'), 'hex')
 		return bitutils.pubkeytoAddr(key)		
-	}
+	},
+	privKeyToWIF: (privKey, compressed = true) => {
+		if (!bitutils.validatePrivateKey(privKey)) throw new Error('Invalid private key')
+
+		let addr = Buffer.concat([Buffer.from([0x80]), privKey])
+		if (compressed) addr = Buffer.concat([addr, Buffer.from([0x01])])
+
+		addr = Buffer.concat([addr, bitutils.doubleHash(addr).slice(0, 4)])
+		return bitutils.base58(addr)
+	},
+	WIFToPrivKey: (wif) => {
+		let key = bitutils.base58decode(wif)
+		if (key.length !== 37 && key.length !== 38)
+			throw new Error('Invalid key length')
+		if (key[0] !== 0x80)
+			throw new Error('Invalid net code')
+		if (!bitutils.doubleHash(key.slice(0, -4)).slice(0, 4).equals(key.slice(-4)))
+			throw new Error('Invalid checksum')
+		let compressed
+		if (key.length === 38) {
+			compressed = true
+			key = key.slice(1, -5)
+		} else {
+			compressed = false
+			key = key.slice(1, -4)
+		}
+		if (!bitutils.validatePrivateKey(key)) throw new Error('Invalid private key')
+		return {
+			key: key,
+			compressed: compressed,
+		}
+	},
+	WIFToAddr: (wif) => {
+		let key = bitutils.WIFToPrivKey(wif)
+		return bitutils.privKeyToAddr(key.key, key.compressed)
+	},
 }
