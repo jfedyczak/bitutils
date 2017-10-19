@@ -8,9 +8,12 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "test": "node test/test.js"
+    "test": "jest"
   },
   "dependencies": {
     "elliptic": "^6.4.0"
+  },
+  "devDependencies": {
+    "jest": "^21.2.1"
   }
 }
