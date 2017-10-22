@@ -174,6 +174,18 @@ test('pubkeytoAddr', () => {
 	})
 })
 
+test('privKeyToPubKey', () => {
+	const cases = [
+		[[bfx('a887add550944120474acff40ef24b2289e7013ec4e00a64c40337d4a0de6f2a'), true], bfx('024cd78a6ae4fb23dd29defe8b44daca05be5bfe4642dc9380064ed80c9ed148c2')],
+		[[bfx('8bdd0ab7866759482b8f16065c7010506d362ced443f5709278f3d44f55302b2'), true], bfx('0262b518253e11799cc405776073b0dc3acbb2d2721368d6f8e57935394ed5ddf9')],
+		[[bfx('e22d02ecbef915d43853737dc4b725fb4a3de819b5d6c97b9e4fef13128cf311'), false], bfx('04b3135c78da3eb3efa36a6798b4de048d45dd3c8243ba0402157391e6af047b2707687fd5901e299c3872a559c6f9bcb3c063a0b947d11cfc28f6e15bb477a23c')],
+		[[bfx('15a763e608b18a7e490060f3c1c29dcc44b7f3d99d6a96ea0549c0908c03a3a0'), false], bfx('040630eaa581d021a3b560b7ed6eea256229dbd8e1956be2026b1f62b85833ec5e9ae4ebd6bdcfcc3b60fb40883b3e76ac5a0360599e175773194cd63b8c9b2fde')],
+	]
+	cases.forEach(c => {
+		expect(bitutils.privKeyToPubKey(c[0][0], c[0][1])).toBeBuffer(c[1])
+	})
+})
+
 test('privKeyToAddr', () => {
 	const cases = [
 		[[bfx('a887add550944120474acff40ef24b2289e7013ec4e00a64c40337d4a0de6f2a'), true], '1MS4TJfe79ZfFpBqQxiRd7Rt3xBLJ1MaQU'],
@@ -217,7 +229,7 @@ test('WIFToPrivKey', () => {
 		let res = bitutils.WIFToPrivKey(c[1])
 		expect(res.key).toBeBuffer(c[0][0])
 		expect(res.compressed).toBe(c[0][1])
-	})	
+	})
 })
 
 test('WIFToAddr', () => {
@@ -229,5 +241,41 @@ test('WIFToAddr', () => {
 	]
 	cases.forEach(c => {
 		expect(bitutils.WIFToAddr(c[0])).toBe(c[1])
+	})	
+})
+
+test('generateWallet', () => {
+	const cases = [
+		[
+			['fef0ceaf13e367bcd715dc092e2aa9d7f9972414907e875566c1fe23274fed21', false],
+			{
+				addr: "1BnPVV5Tt25cxbDg6DqoxJunjSL8reCGz6",
+				wif: "L5mHKZsCLS27nSoGM3RdAwuxjvg7XhJdP25LgqdXe6zF11wpWdbT",
+			}
+		],
+		[
+			['0278d28795c6af1809b05339877680b951ede6e5a98371096997732de614505f', false],
+			{
+				addr: "1FCTUNKbbeXjmsycRaKJYh4zfeJDcXWXdm",
+				wif: "KwJWtFq9MMov4G64T3NgJMH2U8gx53EHxm1zVs1kf7WeAoUmLx4c",
+			}
+		],
+		[
+			['fef0ceaf13e367bcd715dc092e2aa9d7f9972414907e875566c1fe23274fed21', true],
+			{
+				addr: "33voQqbNAYyig272KjcX8GkucWn2x25WEg",
+				wif: "L5mHKZsCLS27nSoGM3RdAwuxjvg7XhJdP25LgqdXe6zF11wpWdbT",
+			}
+		],
+		[
+			['0278d28795c6af1809b05339877680b951ede6e5a98371096997732de614505f', true],
+			{
+				addr: "3EZoGRKkZXQj3r8tedjUFaMpb48D4khPr5",
+				wif: "KwJWtFq9MMov4G64T3NgJMH2U8gx53EHxm1zVs1kf7WeAoUmLx4c",
+			}
+		],
+	]
+	cases.forEach(c => {
+		expect(bitutils.generateWallet(bfx(c[0][0]), c[0][1])).toEqual(c[1])
 	})	
 })

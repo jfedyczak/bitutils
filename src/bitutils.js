@@ -87,10 +87,10 @@ module.exports = bitutils = {
 		while (f.length < 8) f.push(0)
 		return `${i.reverse().join('')}.${f.reverse().join('')}`
 	},
-	doubleHash: (buf) => crypto
-		.createHash('sha256')
+	doubleHash: (buf, hash1 = 'sha256', hash2 = 'sha256') => crypto
+		.createHash(hash2)
 		.update(crypto
-			.createHash('sha256')
+			.createHash(hash1)
 			.update(buf)
 			.digest()
 		)
@@ -173,24 +173,19 @@ module.exports = bitutils = {
 			return false
 		}
 	},
-	pubkeytoAddr: (key) => bitutils.hash160toAddr(
-		crypto.createHash('rmd160')
-			.update(
-				crypto.createHash('sha256')
-					.update(key)
-					.digest()
-				).digest()
-		),
+	pubkeytoAddr: (key) => bitutils.hash160toAddr(bitutils.doubleHash(key, 'sha256', 'rmd160')),
 	validatePrivateKey: (privKey) => {
 		privKey = privKey.toString('hex')
 		return privKey > '0000000000000000000000000000000000000000000000000000000000000000' && privKey < 'fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141'
 	},
-	privKeyToAddr: (privKey, compressed = true) => {
+	privKeyToPubKey: (privKey, compressed = true) => {
 		if (!bitutils.validatePrivateKey(privKey)) throw new Error('Invalid private key')
 
 		let key = ecparams.keyFromPrivate(privKey)
-		key = Buffer.from(key.getPublic(compressed, 'hex'), 'hex')
-		return bitutils.pubkeytoAddr(key)		
+		return Buffer.from(key.getPublic(compressed, 'hex'), 'hex')
+	},
+	privKeyToAddr: (privKey, compressed = true) => {
+		return bitutils.pubkeytoAddr(bitutils.privKeyToPubKey(privKey, compressed))
 	},
 	privKeyToWIF: (privKey, compressed = true) => {
 		if (!bitutils.validatePrivateKey(privKey)) throw new Error('Invalid private key')
@@ -226,5 +221,25 @@ module.exports = bitutils = {
 	WIFToAddr: (wif) => {
 		let key = bitutils.WIFToPrivKey(wif)
 		return bitutils.privKeyToAddr(key.key, key.compressed)
+	},
+	generateWallet(privKey = null, segwit = false) {
+		if (privKey === null)
+			privKey = crypto.randomBytes(32)
+		let wif = bitutils.privKeyToWIF(privKey)
+		let pubKey = bitutils.privKeyToPubKey(privKey, true)
+		let addr
+		if (segwit) {
+			let redeemScript = Buffer.concat([
+				Buffer.from([0x00, 0x14]), // OP_0 | push 20 bytes
+				bitutils.doubleHash(pubKey, 'sha256', 'rmd160'),
+			])
+			addr = bitutils.hash160toAddr(bitutils.doubleHash(redeemScript, 'sha256', 'rmd160'), true)
+		} else {
+			addr = bitutils.pubkeytoAddr(pubKey)
+		}
+		return {
+			wif: wif,
+			addr: addr,
+		}
 	},
 }
