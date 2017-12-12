@@ -1,5 +1,6 @@
 const crypto = require('crypto')
 const EC = require('elliptic').ec
+const bech32 = require('bech32')
 
 let bitutils
 
@@ -162,15 +163,40 @@ module.exports = bitutils = {
 			.copy(addr, 21, 0, 4)
 		return bitutils.base58(addr)	
 	},
-	verifyAddr: (addr) => {
+	encodeBech32: (buf) => {
+		let a = bech32.toWords(buf)
+		a.unshift(0) // version 0 (only 0 supported)
+		return bech32.encode('bc', a)
+	},
+	decodeBech32: (addr) => {
+		let a = bech32.decode(addr)
+		if (a.prefix !== 'bc')
+			throw new Error('Bad prefix')
+		if (a.words.length === 0)
+			throw new Error('Bad length')
+		if (a.words[0] !== 0)
+			throw new Error('Unsupported version')
+		a.words.shift() // remove version
+		let buf = bech32.fromWords(a.words)
+		if (buf.length !== 20 && buf.length !== 32)
+			throw new Error('Wrong payload length')
+		return Buffer.from(buf)
+	},
+	verifyAddr: (address) => {
+		let addr
 		try {
-			addr = bitutils.base58decode(addr)
+			addr = bitutils.base58decode(address)
 			if (addr.length !== 25) throw new Error('Bad address length')
 			if (!addr.slice(21, 25).equals(bitutils.doubleHash(addr.slice(0, 21)).slice(0, 4)))
 				throw new Error('Bad checksum')
 			return true
 		} catch (e) {
-			return false
+			try {
+				bitutils.decodeBech32(address)
+				return true
+			} catch (e) {
+				return false
+			}
 		}
 	},
 	pubkeytoAddr: (key) => bitutils.hash160toAddr(bitutils.doubleHash(key, 'sha256', 'rmd160')),

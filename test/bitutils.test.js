@@ -149,6 +149,26 @@ test('hash160toAddr', () => {
 	})
 })
 
+test('encodeBech32', () => {
+	const cases = [
+		[bfx('751e76e8199196d454941c45d1b3a323f1433bd6'), 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4'],
+		[bfx('1863143c14c5166804bd19203356da136c985678cd4d27a1b8c6329604903262'), 'bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3'],
+	]
+	cases.forEach(c => {
+		expect(bitutils.encodeBech32(c[0])).toBe(c[1])
+	})
+})
+
+test('decodeBech32', () => {
+	const cases = [
+		[bfx('751e76e8199196d454941c45d1b3a323f1433bd6'), 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4'],
+		[bfx('1863143c14c5166804bd19203356da136c985678cd4d27a1b8c6329604903262'), 'bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3'],
+	]
+	cases.forEach(c => {
+		expect(bitutils.decodeBech32(c[1])).toBeBuffer(c[0])
+	})
+})
+
 test('verifyAddr', () => {
 	const cases = [
 		['16UwLL9Risc3QfPqBUvKofHmBQ7wMtjvM', true],
@@ -159,6 +179,10 @@ test('verifyAddr', () => {
 		['1LC9UkHKvTm26sjCZRfow5tZECAz5KSu7B', false],
 		['1GdGQio9sF8EhYFevSPM6Lckw4V7J5bFpU', false],
 		['465nST9zR4AkUF4bjd249q59C4WNgaByNF', false],
+		['bc1qdl753ur9ucwa3cgfrud2nqvu7k69dykk3cwwx6g64a5szn3xw92sp8mc7a', true],
+		['bc1qdm753ur9ucwa3cgfrud2nqvu7k69dykk3cwwx6g64a5szn3xw92sp8mc7a', false],
+		['bc1qwqdg6squsna38e46795at95yu9atm8azzmyvckulcc7kytlcckxswvvzej', true],
+		['bd1qwqdg6squsna38e46795at95yu9atm8azzmyvckulcc7kytlcckxswvvzej', false],
 	]
 	cases.forEach(c => {
 		expect(bitutils.verifyAddr(c[0])).toBe(c[1])
