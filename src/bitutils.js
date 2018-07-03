@@ -16,7 +16,8 @@ const ecparams = new EC('secp256k1')
 module.exports = bitutils = {
 	varInt: (buf) => {
 		switch (buf[0]) {
-			case 0xff: return [buf.readUIntLE(1, 8), 9]
+			// hack - won't work with ints > MAX_SAFE_INTEGER
+			case 0xff: return [buf.readUIntLE(3, 6) * 65536 + buf.readUIntLE(1, 2) , 9]
 			case 0xfe: return [buf.readUIntLE(1, 4), 5]
 			case 0xfd: return [buf.readUIntLE(1, 2), 3]
 			default: return [buf.readUIntLE(0, 1), 1]
